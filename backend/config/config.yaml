@@ -1,0 +1,44 @@
+server:
+  port: 8080
+
+database:
+  host: localhost
+  port: 5432
+  user: postgres
+  password: postgres
+  dbname: goweb
+  sslmode: disable
+
+jwt:
+  secret: mySecretKey
+  expiration: 86400 # 24 hours in seconds
+
+casbin:
+  model: |
+    [request_definition]
+    r = sub, obj, act
+    
+    [policy_definition]
+    p = sub, obj, act
+    
+    [role_definition]
+    g = _, _
+    
+    [policy_effect]
+    e = some(where (p.eft == allow))
+    
+    [matchers]
+    m = g(r.sub, p.sub) && r.obj == p.obj && r.act == p.act
+
+log:
+  level: debug
+  filename: ./logs/app.log
+  maxSize: 10
+  maxBackups: 5
+  maxAge: 30
+  compress: false
+
+redis:
+  addr: localhost:6379
+  password: ""
+  db: 0

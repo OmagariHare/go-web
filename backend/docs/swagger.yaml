@@ -1,0 +1,223 @@
+swagger: '2.0'
+info:
+  title: Go Web API
+  description: Go Web API Documentation
+  version: 1.0.0
+host: localhost:8080
+schemes:
+  - http
+basePath: /
+produces:
+  - application/json
+
+paths:
+  /auth/register:
+    post:
+      summary: 用户注册
+      description: 注册新用户
+      tags:
+        - Authentication
+      parameters:
+        - in: body
+          name: user
+          description: 用户注册信息
+          required: true
+          schema:
+            type: object
+            required:
+              - username
+              - email
+              - password
+            properties:
+              username:
+                type: string
+                example: "john_doe"
+              email:
+                type: string
+                example: "john@example.com"
+              password:
+                type: string
+                example: "password123"
+      responses:
+        '201':
+          description: 注册成功
+          schema:
+            type: object
+            properties:
+              token:
+                type: string
+              user:
+                $ref: '#/definitions/User'
+        '400':
+          description: 请求参数错误
+        '409':
+          description: 用户名或邮箱已存在
+
+  /auth/login:
+    post:
+      summary: 用户登录
+      description: 用户登录获取JWT Token
+      tags:
+        - Authentication
+      parameters:
+        - in: body
+          name: credentials
+          description: 登录凭证
+          required: true
+          schema:
+            type: object
+            required:
+              - username
+              - password
+            properties:
+              username:
+                type: string
+                example: "john_doe"
+              password:
+                type: string
+                example: "password123"
+      responses:
+        '200':
+          description: 登录成功
+          schema:
+            type: object
+            properties:
+              token:
+                type: string
+              user:
+                $ref: '#/definitions/User'
+        '400':
+          description: 请求参数错误
+        '401':
+          description: 用户名或密码错误
+
+  /users:
+    get:
+      summary: 获取用户列表
+      description: 获取所有用户列表（需要管理员权限）
+      tags:
+        - Users
+      security:
+        - Bearer: []
+      responses:
+        '200':
+          description: 获取用户列表成功
+          schema:
+            type: object
+            properties:
+              users:
+                type: array
+                items:
+                  $ref: '#/definitions/User'
+              total:
+                type: integer
+        '401':
+          description: 未认证
+        '403':
+          description: 权限不足
+
+  /users/{id}:
+    get:
+      summary: 获取用户详情
+      description: 根据ID获取用户详细信息
+      tags:
+        - Users
+      security:
+        - Bearer: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: 获取用户详情成功
+          schema:
+            $ref: '#/definitions/User'
+        '401':
+          description: 未认证
+        '403':
+          description: 权限不足
+        '404':
+          description: 用户不存在
+
+    put:
+      summary: 更新用户信息
+      description: 更新指定用户的个人信息
+      tags:
+        - Users
+      security:
+        - Bearer: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: integer
+        - in: body
+          name: user
+          required: true
+          schema:
+            type: object
+            properties:
+              username:
+                type: string
+              email:
+                type: string
+              role_id:
+                type: integer
+      responses:
+        '200':
+          description: 更新用户信息成功
+          schema:
+            $ref: '#/definitions/User'
+        '400':
+          description: 请求参数错误
+        '401':
+          description: 未认证
+        '403':
+          description: 权限不足
+        '404':
+          description: 用户不存在
+
+    delete:
+      summary: 删除用户
+      description: 删除指定用户（需要管理员权限）
+      tags:
+        - Users
+      security:
+        - Bearer: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: 删除用户成功
+        '401':
+          description: 未认证
+        '403':
+          description: 权限不足
+        '404':
+          description: 用户不存在
+
+definitions:
+  User:
+    type: object
+    properties:
+      id:
+        type: integer
+      username:
+        type: string
+      email:
+        type: string
+      role_id:
+        type: integer
+      role:
+        type: string
+
+securityDefinitions:
+  Bearer:
+    type: apiKey
+    name: Authorization
+    in: header
