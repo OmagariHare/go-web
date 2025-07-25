@@ -1,152 +1,97 @@
-import { defineStore } from 'pinia'
-import { ref } from 'vue'
+<template>
+  <el-container class="h-screen">
+    <el-aside width="200px" class="bg-gray-800 text-white">
+      <div class="p-4 text-2xl font-bold">管理后台</div>
+      <el-menu
+        default-active="1"
+        class="el-menu-vertical-demo bg-gray-800 text-white"
+        active-text-color="#ffd04b"
+        background-color="#545c64"
+        text-color="#fff"
+      >
+        <el-menu-item index="1">
+          <el-icon><i-ep-menu /></el-icon>
+          <span>仪表盘</span>
+        </el-menu-item>
+        <el-menu-item index="2">
+          <el-icon><i-ep-user /></el-icon>
+          <span>用户管理</span>
+        </el-menu-item>
+      </el-menu>
+    </el-aside>
+    <el-container>
+      <el-header class="flex justify-between items-center bg-white border-b">
+        <div></div>
+        <el-dropdown>
+          <span class="el-dropdown-link">
+            欢迎, {{ authStore.user?.username }}
+            <el-icon class="el-icon--right"><i-ep-arrow-down /></el-icon>
+          </span>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item @click="handleLogout">退出登录</el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
+      </el-header>
+      <el-main class="bg-gray-100 p-8">
+        <el-card>
+          <template #header>
+            <div class="text-xl font-semibold">欢迎回来！</div>
+          </template>
+          <div v-if="authStore.user">
+            <p><strong>用户名:</strong> {{ authStore.user.username }}</p>
+            <p><strong>邮箱:</strong> {{ authStore.user.email }}</p>
+            <p><strong>角色:</strong> {{ authStore.user.role }}</p>
+          </div>
+        </el-card>
+      </el-main>
+    </el-container>
+  </el-container>
+</template>
 
-export const useAuthStore = defineStore('auth', () => {
-  const token = ref(localStorage.getItem('token'))
-  const user = ref(JSON.parse(localStorage.getItem('user') || 'null'))
-  const isAuthenticated = ref(!!token.value)
-
-  function setAuth(newToken: string, newUser: any) {
-    token.value = newToken
-    user.value = newUser
-    isAuthenticated.value = true
-    localStorage.setItem('token', newToken)
-    localStorage.setItem('user', JSON.stringify(newUser))
-  }
-
-  function logout() {
-    token.value = null
-    user.value = null
-    isAuthenticated.value = false
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
-  }
-
-  function checkAuth() {
-    const storedToken = localStorage.getItem('token')
-    const storedUser = localStorage.getItem('user')
-    token.value = storedToken
-    user.value = storedUser ? JSON.parse(storedUser) : null
-    isAuthenticated.value = !!storedToken
-  }
-
-  return { token, user, isAuthenticated, setAuth, logout, checkAuth }
-})
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../store/authStore'
+import { ElMessage, ElMessageBox } from 'element-plus'
 
 const router = useRouter()
 const authStore = useAuthStore()
-const loading = ref(true)
-const error = ref('')
 
-// 检查认证状态
-const checkAuth = () => {
+onMounted(() => {
   authStore.checkAuth()
   if (!authStore.isAuthenticated) {
     router.push('/')
   }
-}
-
-onMounted(() => {
-  checkAuth()
-  loading.value = false
 })
 
-// 登出功能
 const handleLogout = () => {
-  authStore.logout()
-  router.push('/')
+  ElMessageBox.confirm('您确定要退出登录吗？', '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(() => {
+    authStore.logout()
+    router.push('/')
+    ElMessage({
+      type: 'success',
+      message: '退出成功！'
+    })
+  }).catch(() => {
+    // Cancel
+  })
 }
 </script>
 
-<template>
-  <div class="dashboard-container">
-    <div class="header">
-      <h1>仪表板</h1>
-      <button @click="handleLogout" class="logout-button">登出</button>
-    </div>
-    
-    <div v-if="loading" class="loading">
-      加载中...
-    </div>
-    
-    <div v-else-if="error" class="error">
-      {{ error }}
-    </div>
-    
-    <div v-else-if="authStore.user" class="user-info">
-      <h2>欢迎, {{ authStore.user.username }}!</h2>
-      <div class="info-card">
-        <h3>用户信息</h3>
-        <p><strong>用户名:</strong> {{ authStore.user.username }}</p>
-        <p><strong>邮箱:</strong> {{ authStore.user.email }}</p>
-        <p><strong>角色:</strong> {{ authStore.user.role }}</p>
-      </div>
-    </div>
-  </div>
-</template>
-
 <style scoped>
-.dashboard-container {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 2rem;
+.el-menu-vertical-demo:not(.el-menu--collapse) {
+  width: 200px;
+  min-height: 400px;
 }
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #eee;
-}
-
-.logout-button {
-  padding: 0.5rem 1rem;
-  background-color: #f56c6c;
-  color: white;
-  border: none;
-  border-radius: 4px;
+.el-dropdown-link {
   cursor: pointer;
-}
-
-.logout-button:hover {
-  background-color: #f78989;
-}
-
-.loading, .error {
-  text-align: center;
-  padding: 2rem;
-  font-size: 1.2rem;
-}
-
-.error {
-  color: #f56c6c;
-}
-
-.user-info h2 {
-  color: #333;
-  margin-bottom: 1.5rem;
-}
-
-.info-card {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-.info-card h3 {
-  margin-top: 0;
-  color: #333;
-}
-
-.info-card p {
-  margin: 0.5rem 0;
-  color: #666;
+  display: flex;
+  align-items: center;
 }
 </style>
