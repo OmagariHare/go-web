@@ -1,3 +1,5 @@
+// package services 包含了应用程序的业务逻辑。
+// 它作为控制器和仓库之间的桥梁，处理如用户认证、注册等核心功能。
 package services
 
 import (
@@ -7,33 +9,40 @@ import (
 	"go-web/utils"
 )
 
-// UserExistsError 是用户已存在时返回的错误
+// UserExistsError 在尝试创建已存在的用户时返回。
 type UserExistsError struct{}
 
+// Error 实现了 error 接口。
 func (e *UserExistsError) Error() string {
-	return "user already exists"
+	return "用户已存在"
 }
 
-// InvalidCredentialsError 是凭证无效时返回的错误
+// InvalidCredentialsError 在登录时提供的用户名或密码不正确时返回。
 type InvalidCredentialsError struct{}
 
+// Error 实现了 error 接口。
 func (e *InvalidCredentialsError) Error() string {
-	return "invalid username or password"
+	return "无效的用户名或密码"
 }
 
-// AuthServiceInterface defines the contract for authentication services.
+// AuthServiceInterface 定义了认证服务应实现的功能契约。
+// 使用接口可以方便地在测试中替换真实的服务实现。
 type AuthServiceInterface interface {
+	// Register 处理新用户的注册逻辑。
 	Register(username, email, password string) (*models.User, string, error)
+	// Login 处理用户的登录逻辑。
 	Login(username, password string) (*models.User, string, error)
 }
 
-// AuthService 提供认证相关的业务逻辑
+// AuthService 提供了认证相关的业务逻辑实现。
+// 它依赖于配置、用户仓库和角色仓库。
 type AuthService struct {
 	Config         *config.Config
 	UserRepository repositories.UserRepository
 	RoleRepository repositories.RoleRepository
 }
 
+// NewAuthService 是 AuthService 的构造函数。
 func NewAuthService(cfg *config.Config, userRepo repositories.UserRepository, roleRepo repositories.RoleRepository) AuthServiceInterface {
 	return &AuthService{
 		Config:         cfg,
@@ -42,32 +51,33 @@ func NewAuthService(cfg *config.Config, userRepo repositories.UserRepository, ro
 	}
 }
 
-// Register 注册新用户
+// Register 负责注册一个新用户。
+// 它会检查用户是否已存在，对密码进行哈希处理，分配默认角色，创建用户，并生成JWT。
 func (s *AuthService) Register(username, email, password string) (*models.User, string, error) {
-	// 检查用户是否已存在
+	// 1. 检查用户名或邮箱是否已经被注册
 	_, err := s.UserRepository.FindByUsernameOrEmail(username, email)
 	if err == nil {
 		return nil, "", &UserExistsError{}
 	}
 
-	// 加密密码
+	// 2. 对用户密码进行哈希加密
 	hashedPassword, err := utils.HashPassword(password)
 	if err != nil {
 		return nil, "", err
 	}
 
-	// 获取默认角色
+	// 3. 获取或创建默认角色
 	defaultRoleName := s.Config.App.DefaultRole
 	role, err := s.RoleRepository.FindByName(defaultRoleName)
 	if err != nil {
-		// 如果默认角色不存在，则创建
-		role = &models.Role{Name: defaultRoleName, Description: "Regular user"}
+		// 如果默认角色在数据库中不存在，则创建一个新的
+		role = &models.Role{Name: defaultRoleName, Description: "普通用户"}
 		if err := s.RoleRepository.Create(role); err != nil {
 			return nil, "", err
 		}
 	}
 
-	// 创建新用户
+	// 4. 创建新用户实例
 	user := &models.User{
 		Username: username,
 		Email:    email,
@@ -75,16 +85,17 @@ func (s *AuthService) Register(username, email, password string) (*models.User, 
 		RoleID:   role.ID,
 	}
 
+	// 5. 将新用户存入数据库
 	if err := s.UserRepository.Create(user); err != nil {
 		return nil, "", err
 	}
 
-	// 加载用户角色
+	// 6. 加载用户的角色信息，以便在后续步骤中使用
 	if err := s.UserRepository.LoadRole(user); err != nil {
 		return nil, "", err
 	}
 
-	// 生成JWT token
+	// 7. 为新注册的用户生成JWT
 	token, err := utils.GenerateToken(user.ID, user.Role.Name, s.Config)
 	if err != nil {
 		return nil, "", err
@@ -93,25 +104,26 @@ func (s *AuthService) Register(username, email, password string) (*models.User, 
 	return user, token, nil
 }
 
-// Login 用户登录
+// Login 负责处理用户登录。
+// 它会验证用户名和密码，如果成功，则生成一个新的JWT。
 func (s *AuthService) Login(username, password string) (*models.User, string, error) {
-	// 查找用户
+	// 1. 根据用户名查找用户
 	user, err := s.UserRepository.FindByUsername(username)
 	if err != nil {
 		return nil, "", &InvalidCredentialsError{}
 	}
 
-	// 验证密码
+	// 2. 验证提供的密码是否与存储的哈希密码匹配
 	if err := utils.CheckPasswordHash(password, user.Password); err != nil {
 		return nil, "", &InvalidCredentialsError{}
 	}
 
-	// 加载用户角色
+	// 3. 加载用户的角色信息
 	if err := s.UserRepository.LoadRole(user); err != nil {
 		return nil, "", err
 	}
 
-	// 生成JWT token
+	// 4. 生成JWT
 	token, err := utils.GenerateToken(user.ID, user.Role.Name, s.Config)
 	if err != nil {
 		return nil, "", err

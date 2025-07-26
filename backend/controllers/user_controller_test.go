@@ -50,7 +50,7 @@ func (m *MockUserService) DeleteUser(id uint) error {
 }
 
 // setupCorrectIsolatedUserRouter sets up a fully isolated router for testing user endpoints.
-func setupCorrectIsolatedUserRouter(t *testing.T, e *casbin.Enforcer) (*gin.Engine, *MockUserService, *config.Config) {
+func setupCorrectIsolatedUserRouter(e *casbin.Enforcer) (*gin.Engine, *MockUserService, *config.Config) {
 	gin.SetMode(gin.TestMode)
 
 	mockUserService := new(MockUserService)
@@ -89,7 +89,7 @@ m = g(r.sub, p.sub) && r.obj == p.obj && r.act == p.act`)
 	_, err := casbinEnforcer.AddPolicy("admin", "/users", "GET")
 	assert.NoError(t, err)
 
-	router, mockUserService, cfg := setupCorrectIsolatedUserRouter(t, casbinEnforcer)
+	router, mockUserService, cfg := setupCorrectIsolatedUserRouter(casbinEnforcer)
 
 	mockedUsers := []models.User{{Model: gorm.Model{ID: 1}, Username: "user1"}}
 	mockUserService.On("GetUsers").Return(mockedUsers, nil)
@@ -129,7 +129,7 @@ m = g(r.sub, p.sub) && r.obj == p.obj && r.act == p.act`)
 	_, err := casbinEnforcer.AddPolicy("admin", "/users", "GET")
 	assert.NoError(t, err)
 
-	router, _, cfg := setupCorrectIsolatedUserRouter(t, casbinEnforcer)
+	router, _, cfg := setupCorrectIsolatedUserRouter(casbinEnforcer)
 
 	// Token is for a 'user', who does not have permission
 	token, err := utils.GenerateToken(2, "user", cfg)
