@@ -50,11 +50,12 @@ func (s *AuthService) Register(username, email, password string) (*models.User, 
 		return nil, "", err
 	}
 
-	// 获取默认角色（普通用户）
-	role, err := s.RoleRepository.FindByName("user")
+	// 获取默认角色
+	defaultRoleName := s.Config.App.DefaultRole
+	role, err := s.RoleRepository.FindByName(defaultRoleName)
 	if err != nil {
 		// 如果默认角色不存在，则创建
-		role = &models.Role{Name: "user", Description: "Regular user"}
+		role = &models.Role{Name: defaultRoleName, Description: "Regular user"}
 		if err := s.RoleRepository.Create(role); err != nil {
 			return nil, "", err
 		}

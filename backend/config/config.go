@@ -8,6 +8,7 @@ import (
 )
 
 type Config struct {
+	App      AppConfig
 	Server   ServerConfig
 	Database DatabaseConfig
 	JWT      JWTConfig
@@ -16,8 +17,12 @@ type Config struct {
 	Redis    RedisConfig
 }
 
+type AppConfig struct {
+	DefaultRole string
+}
+
 type ServerConfig struct {
-	Port          int
+	Port           int
 	AllowedOrigins []string
 }
 
@@ -60,7 +65,8 @@ func LoadConfig() *Config {
 	viper.AddConfigPath("./config")
 
 	// 设置默认值
-		viper.SetDefault("server.port", 8080)
+	viper.SetDefault("app.default_role", "user")
+	viper.SetDefault("server.port", 8080)
 	viper.SetDefault("server.allowed_origins", []string{"http://localhost:3000"})
 	viper.SetDefault("database.host", "localhost")
 	viper.SetDefault("database.port", 5432)
@@ -68,7 +74,8 @@ func LoadConfig() *Config {
 	viper.SetDefault("database.password", "postgres")
 	viper.SetDefault("database.dbname", "goweb")
 	viper.SetDefault("database.sslmode", "disable")
-	viper.SetDefault("jwt.secret", "mySecretKey")
+	// 移除了不安全的默认JWT密钥
+	// viper.SetDefault("jwt.secret", "mySecretKey")
 	viper.SetDefault("jwt.expiration", 86400)
 	viper.SetDefault("log.level", "debug")
 	viper.SetDefault("log.filename", "./logs/app.log")
@@ -79,15 +86,18 @@ func LoadConfig() *Config {
 	viper.SetDefault("redis.addr", "localhost:6379")
 	viper.SetDefault("redis.password", "")
 	viper.SetDefault("redis.db", 0)
-	
+
 	// 读取配置文件
 	if err := viper.ReadInConfig(); err != nil {
 		log.Printf("Warning: unable to read config file: %v, using defaults", err)
 	}
 
 	config := &Config{
+		App: AppConfig{
+			DefaultRole: viper.GetString("app.default_role"),
+		},
 		Server: ServerConfig{
-			Port:          viper.GetInt("server.port"),
+			Port:           viper.GetInt("server.port"),
 			AllowedOrigins: viper.GetStringSlice("server.allowed_origins"),
 		},
 		Database: DatabaseConfig{

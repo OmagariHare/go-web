@@ -14,6 +14,11 @@ func main() {
 	// 加载配置
 	cfg := config.LoadConfig()
 
+	// 安全检查：确保JWT密钥已设置
+	if cfg.JWT.Secret == "" {
+		log.Fatal("FATAL: JWT secret is not configured. Please set 'jwt.secret' in config.yaml or environment variables.")
+	}
+
 	// 初始化日志
 	utils.InitLogger()
 	defer utils.SyncLogger()
