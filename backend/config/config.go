@@ -74,8 +74,6 @@ func LoadConfig() *Config {
 	viper.SetDefault("database.password", "postgres")
 	viper.SetDefault("database.dbname", "goweb")
 	viper.SetDefault("database.sslmode", "disable")
-	// 移除了不安全的默认JWT密钥
-	// viper.SetDefault("jwt.secret", "mySecretKey")
 	viper.SetDefault("jwt.expiration", 86400)
 	viper.SetDefault("log.level", "debug")
 	viper.SetDefault("log.filename", "./logs/app.log")

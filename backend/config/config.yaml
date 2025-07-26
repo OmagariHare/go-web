@@ -10,7 +10,7 @@ database:
   sslmode: disable
 
 jwt:
-  secret: mySecretKey
+  secret: # secret key
   expiration: 86400 # 24 hours in seconds
 
 casbin:
