@@ -8,12 +8,20 @@ import (
 
 var ErrPermissionDenied = errors.New("permission denied")
 
+// UserServiceInterface defines the contract for user-related services.
+type UserServiceInterface interface {
+	GetUsers() ([]models.User, error)
+	GetUser(id uint) (*models.User, error)
+	UpdateUser(targetUserID, currentUserID uint, currentUserRole string, updateUser *models.User) (*models.User, error)
+	DeleteUser(id uint) error
+}
+
 // UserService 提供用户相关的业务逻辑
 type UserService struct {
 	UserRepository repositories.UserRepository
 }
 
-func NewUserService(userRepo repositories.UserRepository) *UserService {
+func NewUserService(userRepo repositories.UserRepository) UserServiceInterface {
 	return &UserService{UserRepository: userRepo}
 }
 

@@ -77,23 +77,31 @@ func InitCasbin(cfg *config.Config) error {
 
 func CasbinMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// Use the global enforcer
+		CasbinMiddlewareWithEnforcer(Enforcer)(c)
+	}
+}
+
+// CasbinMiddlewareWithEnforcer creates a middleware with a specific enforcer instance.
+func CasbinMiddlewareWithEnforcer(e *casbin.Enforcer) gin.HandlerFunc {
+	return func(c *gin.Context) {
 		role, exists := c.Get("role")
 		if !exists {
-			role = "anonymous"
+			c.JSON(http.StatusForbidden, gin.H{"error": "Role not found in token"})
+			c.Abort()
+			return
 		}
 
-		obj := c.Request.URL.Path
-		act := c.Request.Method
-
-		ok, err := Enforcer.Enforce(role.(string), obj, act)
+		// Check permission
+		ok, err := e.Enforce(role.(string), c.Request.URL.Path, c.Request.Method)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Authorization error"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error occurred when authorizing user"})
 			c.Abort()
 			return
 		}
 
 		if !ok {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
+			c.JSON(http.StatusForbidden, gin.H{"error": "You are not authorized to access this resource"})
 			c.Abort()
 			return
 		}

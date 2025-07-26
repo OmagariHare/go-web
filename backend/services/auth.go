@@ -21,6 +21,12 @@ func (e *InvalidCredentialsError) Error() string {
 	return "invalid username or password"
 }
 
+// AuthServiceInterface defines the contract for authentication services.
+type AuthServiceInterface interface {
+	Register(username, email, password string) (*models.User, string, error)
+	Login(username, password string) (*models.User, string, error)
+}
+
 // AuthService 提供认证相关的业务逻辑
 type AuthService struct {
 	Config         *config.Config
@@ -28,7 +34,7 @@ type AuthService struct {
 	RoleRepository repositories.RoleRepository
 }
 
-func NewAuthService(cfg *config.Config, userRepo repositories.UserRepository, roleRepo repositories.RoleRepository) *AuthService {
+func NewAuthService(cfg *config.Config, userRepo repositories.UserRepository, roleRepo repositories.RoleRepository) AuthServiceInterface {
 	return &AuthService{
 		Config:         cfg,
 		UserRepository: userRepo,
