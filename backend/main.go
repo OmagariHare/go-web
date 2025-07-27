@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"go-web/cache"
 	"go-web/config"
 	"go-web/database"
 	"go-web/routers"
@@ -26,8 +25,6 @@ func main() {
 	// 连接数据库
 	database.ConnectDB(cfg)
 
-	// 连接Redis
-	cache.ConnectRedis(cfg)
 
 	// 设置路由
 	r := routers.SetupRouter(cfg)

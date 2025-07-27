@@ -44,28 +44,24 @@ func InitCasbin(cfg *config.Config) error {
 		return err
 	}
 
-	// 添加默认策略（如果不存在）
-	if ok, _ := e.HasPolicy("admin", "*", "*"); !ok {
+	// 添加默认策略（如果策略为空）
+	policies, err := e.GetPolicy()
+	if err != nil {
+		return err
+	}
+	if len(policies) == 0 {
 		if _, err := e.AddPolicy("admin", "*", "*"); err != nil {
 			return err
 		}
-	}
-	if ok, _ := e.HasPolicy("user", "/users/:id", "GET"); !ok {
 		if _, err := e.AddPolicy("user", "/users/:id", "GET"); err != nil {
 			return err
 		}
-	}
-	if ok, _ := e.HasPolicy("user", "/users/:id", "PUT"); !ok {
 		if _, err := e.AddPolicy("user", "/users/:id", "PUT"); err != nil {
 			return err
 		}
-	}
-	if ok, _ := e.HasPolicy("anonymous", "/auth/register", "POST"); !ok {
 		if _, err := e.AddPolicy("anonymous", "/auth/register", "POST"); err != nil {
 			return err
 		}
-	}
-	if ok, _ := e.HasPolicy("anonymous", "/auth/login", "POST"); !ok {
 		if _, err := e.AddPolicy("anonymous", "/auth/login", "POST"); err != nil {
 			return err
 		}
@@ -78,18 +74,18 @@ func InitCasbin(cfg *config.Config) error {
 func CasbinMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Use the global enforcer
-		CasbinMiddlewareWithEnforcer(Enforcer)(c)
+		middleware := CasbinMiddlewareWithEnforcer(Enforcer)
+		middleware(c)
 	}
 }
 
 // CasbinMiddlewareWithEnforcer creates a middleware with a specific enforcer instance.
 func CasbinMiddlewareWithEnforcer(e *casbin.Enforcer) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// 获取用户角色，如果不存在则默认为anonymous
 		role, exists := c.Get("role")
 		if !exists {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Role not found in token"})
-			c.Abort()
-			return
+			role = "anonymous"
 		}
 
 		// Check permission

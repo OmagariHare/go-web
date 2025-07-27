@@ -1,108 +1,100 @@
-# Go-Web 后端服务
+# Go-Web Project - Backend
 
-本项目是 Go-Web 应用的后端服务，基于 Go 语言和 Gin 框架构建。它为前端应用提供了一个安全、高性能且可扩展的 RESTful API。
-
----
-
-## 🚀 核心功能
-
-- **高性能 API**: 基于 [Gin](https://gin-gonic.com/) 框架，提供卓越的 HTTP 处理性能。
-- **JWT 认证**: 使用 JSON Web Tokens (JWT) 实现无状态、安全的用户认证机制。
-- **Casbin 权限控制**: 集成 [Casbin](https://casbin.org/) 实现基于角色的访问控制 (RBAC)，支持精细化的权限管理。
-- **ORM 操作**: 采用 [GORM](https://gorm.io/) 作为 ORM 框架，简化数据库操作，默认支持 PostgreSQL。
-- **Viper 配置管理**: 通过 [Viper](https://github.com/spf13/viper) 管理应用配置，支持从 `config.yaml` 文件中读取，灵活易用。
-- **结构化日志**: 使用 [Zap](https://github.com/uber-go/zap) 和 `lumberjack` 实现高性能的结构化日志记录与自动分割归档。
-- **中间件架构**: 清晰的中间件设计，用于处理 CORS、JWT 验证、日志记录和权限检查。
-- **Redis 缓存**: 集成 [Go-Redis](https://github.com/go-redis/redis) 提供高速缓存支持。
-- **Swagger API 文档**: 内置 Swagger 支持，方便生成和浏览 API 文档。
+This is the backend service for the Go-Web application, built with Go and the Gin framework. It provides a robust, secure, and scalable foundation for the frontend.
 
 ---
 
-## 🛠️ 技术栈
+## 🚀 Core Features
 
-- **核心框架**: [Gin](https://github.com/gin-gonic/gin)
-- **数据库**: [PostgreSQL](https://www.postgresql.org/)
+- **High-Performance API**: Built with [Gin](https://gin-gonic.com/), a high-performance HTTP web framework.
+- **Authentication**: Secure user authentication using JSON Web Tokens (JWT).
+- **Authorization**: Fine-grained access control powered by [Casbin](https://casbin.org/) for role-based permissions.
+- **Database ORM**: Utilizes [GORM](https://gorm.io/) for elegant and efficient database interactions, with support for PostgreSQL.
+- **Configuration Management**: Flexible configuration handling with [Viper](https://github.com/spf13/viper), allowing for easy setup via a `config.yaml` file.
+- **Structured Logging**: Production-ready logging with [Zap](https://github.com/uber-go/zap) and `lumberjack` for log rotation.
+- **Middleware Architecture**: A clean, modular middleware implementation for CORS, JWT validation, and logging.
+- **RESTful Design**: Follows REST principles for a clean and predictable API.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Framework**: [Gin](https://github.com/gin-gonic/gin)
+- **Database**: [PostgreSQL](https://www.postgresql.org/)
 - **ORM**: [GORM](https://gorm.io/)
-- **认证**: [JWT-Go](https://github.com/golang-jwt/jwt)
-- **授权**: [Casbin](https://github.com/casbin/casbin)
-- **配置**: [Viper](https://github.com/spf13/viper)
-- **日志**: [Zap](https://github.com/uber-go/zap)
-- **缓存**: [Go-Redis](https://github.com/go-redis/redis)
-- **API 文档**: [Swagger](https://swagger.io/)
+- **Authentication**: [JWT-Go](https://github.com/golang-jwt/jwt)
+- **Authorization**: [Casbin](https://github.com/casbin/casbin)
+- **Configuration**: [Viper](https://github.com/spf13/viper)
+- **Logging**: [Zap](https://github.com/uber-go/zap)
 
 ---
 
-## ⚙️ 本地开发指南
+## ⚙️ Getting Started
 
-请遵循以下步骤在本地环境中设置并运行后端服务。
+Follow these instructions to get the backend service running on your local machine.
 
-### 环境要求
+### Prerequisites
 
-- [Go](https://golang.org/dl/) (建议版本 1.18+)
-- [PostgreSQL](https://www.postgresql.org/download/) 数据库服务
-- [Redis](https://redis.io/download) 服务 (可选)
+- [Go](https://golang.org/dl/) (version 1.18 or higher)
+- [PostgreSQL](https://www.postgresql.org/download/) running locally or on a server
 
-### 安装与配置
+### Installation & Setup
 
-1.  **进入后端目录**:
+1.  **Navigate to the backend directory**:
     ```sh
-    cd backend
+    cd go-web/backend
     ```
 
-2.  **安装依赖**:
-    此命令将下载并安装 `go.mod` 文件中定义的所有依赖项。
+2.  **Install Go dependencies**:
     ```sh
     go mod tidy
     ```
 
-3.  **配置应用**:
-    - 复制或重命名 `config/config.yaml.example` 为 `config/config.yaml`。
-    - 打开 `config/config.yaml` 文件并更新以下配置：
-      - `database`: 你的 PostgreSQL 数据库连接信息 (主机、端口、用户名、密码、数据库名)。
-      - `redis`: 你的 Redis 连接信息。
-      - `jwt`: 用于签发 JWT 的密钥 (secret)。
+3.  **Configure the application**:
+    - Rename `config/config.yaml.example` to `config/config.yaml` (if an example file is provided).
+    - Open `config/config.yaml` and update the following sections:
+      - `database`: Set your PostgreSQL connection details (host, port, user, password, dbname).
+      - `jwt`: Set a secret key for signing JWT tokens.
 
-4.  **初始化数据库**:
-    应用在启动时会自动执行 GORM 的 `AutoMigrate`，以根据 `models` 目录下的模型创建或更新数据库表结构。
+4.  **Initialize the database**:
+    Run the database migration logic (if available) to set up the necessary tables. This might be part of the application's startup sequence.
 
-### 启动服务
+### Running the Application
 
-- **运行应用**:
+- **Start the server**:
   ```sh
   go run main.go
   ```
-  服务启动后，将监听在 `config.yaml` 中配置的端口（默认为 `8080`）。
+  The server will start, typically on port `8080` (as configured in `config.yaml`).
 
 ---
 
-## 📄 API 文档
+## 📄 API Documentation
 
-项目使用 Swagger 生成 API 文档。
+Project uses Swagger to generate API documentation.
 
-- **Swagger 定义文件**: API 的 OpenAPI 规范定义在 `docs/swagger.yaml`。
-- **在线文档**: 服务运行后，可以通过访问 `http://localhost:8080/swagger/index.html` (需在代码中配置) 来查看和测试 API。
+- **Swagger definition file**: The OpenAPI specification for the API is defined in `docs/swagger.yaml`.
+- **Online documentation**: After the service is running, you can access `http://localhost:8080/swagger/index.html` to view and test the API.
 
 ---
 
-## 📁 目录结构详解
+## 📁 Directory Structure Explained
 
 ```
 backend/
-├── cache/         # Redis 缓存相关逻辑
-├── config/        # Viper 配置初始化及 config.yaml 配置文件
-├── controllers/   # Gin 的控制器层 (Handler)，处理 HTTP 请求
-├── database/      # 数据库连接 (GORM) 初始化
-├── docs/          # Swagger API 文档文件
-├── dtos/          # 数据传输对象 (Data Transfer Objects)，用于 API 的请求和响应
-├── logs/          # 由 Zap 生成的日志文件存放目录
-├── middleware/    # Gin 中间件 (JWT, CORS, Casbin, 日志等)
-├── models/        # GORM 的数据库模型定义
-├── repositories/  # 数据仓库层，封装数据库的增删改查操作
-├── routers/       # API 路由定义
-├── services/      # 核心业务逻辑层
-├── utils/         # 通用工具函数 (如密码处理, JWT 生成)
-├── validators/    # 请求参数校验器
-├── go.mod         # Go 模块依赖文件
-├── go.sum         # 依赖项的校验和
-└── main.go        # 应用主入口
+├── config/        # Viper configuration initialization and config.yaml configuration file
+├── controllers/   # Gin controller layer (Handler), processing HTTP requests
+├── database/      # Database connection (GORM) initialization
+├── docs/          # Swagger API documentation files
+├── dtos/          # Data Transfer Objects, for API requests and responses
+├── logs/          # Log files generated by Zap
+├── middleware/    # Gin middleware (JWT, CORS, Casbin, logging, etc.)
+├── models/        # GORM database model definitions
+├── repositories/  # Data repository layer, encapsulating database CRUD operations
+├── routers/       # API route definitions
+├── services/      # Core business logic layer
+├── utils/         # General utility functions (e.g., password processing, JWT generation)
+├── go.mod         # Go module dependency file
+├── go.sum         # Dependency checksums
+└── main.go        # Application entry point
 ```

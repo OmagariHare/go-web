@@ -37,8 +37,3 @@ log:
   maxBackups: 5
   maxAge: 30
   compress: false
-
-redis:
-  addr: localhost:6379
-  password: ""
-  db: 0
