@@ -19,7 +19,14 @@ func main() {
 	}
 
 	// 初始化日志
-	utils.InitLogger()
+	utils.InitLogger(
+		cfg.Log.Level,
+		cfg.Log.Filename,
+		cfg.Log.MaxSize,
+		cfg.Log.MaxBackups,
+		cfg.Log.MaxAge,
+		cfg.Log.Compress,
+	)
 	defer utils.SyncLogger()
 
 	// 连接数据库

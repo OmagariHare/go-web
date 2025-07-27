@@ -2,6 +2,7 @@ package utils
 
 import (
 	"os"
+	"strings"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -10,14 +11,14 @@ import (
 
 var Logger *zap.Logger
 
-func InitLogger() {
+func InitLogger(logLevel, filename string, maxSize, maxBackups, maxAge int, compress bool) {
 	// 配置日志轮转
 	lumberJackLogger := &lumberjack.Logger{
-		Filename:   "./logs/app.log",
-		MaxSize:    10,    // 每个日志文件最大10MB
-		MaxBackups: 5,     // 最多保留5个备份
-		MaxAge:     30,    // 最多保留30天
-		Compress:   false, // 不压缩
+		Filename:   filename,
+		MaxSize:    maxSize,
+		MaxBackups: maxBackups,
+		MaxAge:     maxAge,
+		Compress:   compress,
 	}
 
 	// 创建zap配置
@@ -35,11 +36,28 @@ func InitLogger() {
 		EncodeCaller:   zapcore.ShortCallerEncoder,
 	}
 
+	// 解析日志级别
+	level := zapcore.DebugLevel
+	switch strings.ToLower(logLevel) {
+	case "debug":
+		level = zapcore.DebugLevel
+	case "info":
+		level = zapcore.InfoLevel
+	case "warn":
+		level = zapcore.WarnLevel
+	case "error":
+		level = zapcore.ErrorLevel
+	case "fatal":
+		level = zapcore.FatalLevel
+	case "panic":
+		level = zapcore.PanicLevel
+	}
+
 	// 创建核心
 	core := zapcore.NewCore(
 		zapcore.NewJSONEncoder(encoderConfig),
 		zapcore.NewMultiWriteSyncer(zapcore.AddSync(lumberJackLogger), zapcore.AddSync(os.Stdout)),
-		zapcore.DebugLevel,
+		level,
 	)
 
 	// 创建logger
