@@ -27,7 +27,8 @@ func (uc *UserController) GetUsers(c *gin.Context) {
 	}
 
 	var userResponses []dtos.UserResponse
-	for _, user := range users {
+	for i := range users {
+		user := &users[i]
 		userResponses = append(userResponses, dtos.UserResponse{
 			ID:       user.ID,
 			Username: user.Username,
