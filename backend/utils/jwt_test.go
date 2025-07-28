@@ -1,4 +1,3 @@
-
 package utils
 
 import (
@@ -51,7 +50,7 @@ func TestJWTFunctions(t *testing.T) {
 	expiredToken, _ := GenerateToken(userID, role, cfgExpired)
 	// Wait a moment to ensure the timestamp is in the past
 	time.Sleep(1 * time.Second)
-	claims, err = ParseToken(expiredToken, cfgExpired.JWT.Secret)
+	_, err = ParseToken(expiredToken, cfgExpired.JWT.Secret)
 
 	assert.Error(t, err, "Parsing an expired token should produce an error")
 	assert.Contains(t, err.Error(), "token is expired", "Error message should indicate token expiration")

@@ -32,15 +32,13 @@ func main() {
 	// 连接数据库
 	database.ConnectDB(cfg)
 
-
 	// 设置路由
 	r := routers.SetupRouter(cfg)
 
 	// 启动服务器
 	port := cfg.Server.Port
 	log.Printf("Server starting on port %d", port)
-	err := r.Run(fmt.Sprintf(":%d", port))
-	if err != nil {
-		log.Fatal("Failed to start server:", err)
+	if err := r.Run(fmt.Sprintf(":%d", port)); err != nil {
+		log.Println("Failed to start server:", err)
 	}
 }

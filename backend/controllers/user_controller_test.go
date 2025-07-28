@@ -97,7 +97,7 @@ m = g(r.sub, p.sub) && r.obj == p.obj && r.act == p.act`)
 	token, err := utils.GenerateToken(1, "admin", cfg)
 	assert.NoError(t, err)
 
-	req, _ := http.NewRequest(http.MethodGet, "/users", nil)
+	req, _ := http.NewRequest(http.MethodGet, "/users", http.NoBody)
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 
 	w := httptest.NewRecorder()
@@ -135,7 +135,7 @@ m = g(r.sub, p.sub) && r.obj == p.obj && r.act == p.act`)
 	token, err := utils.GenerateToken(2, "user", cfg)
 	assert.NoError(t, err)
 
-	req, _ := http.NewRequest(http.MethodGet, "/users", nil)
+	req, _ := http.NewRequest(http.MethodGet, "/users", http.NoBody)
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 
 	w := httptest.NewRecorder()

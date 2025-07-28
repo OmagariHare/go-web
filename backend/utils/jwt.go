@@ -35,7 +35,7 @@ func GenerateToken(userID uint, role string, cfg *config.Config) (string, error)
 }
 
 // ParseToken 解析JWT token
-func ParseToken(tokenStr string, secret string) (*Claims, error) {
+func ParseToken(tokenStr, secret string) (*Claims, error) {
 	claims := &Claims{}
 
 	token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {

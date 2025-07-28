@@ -36,13 +36,14 @@ func LoggingMiddleware(logger *zap.Logger) gin.HandlerFunc {
 
 		// No need to log c.Errors here, as it's handled by the ErrorHandler middleware.
 		// We can, however, log at different levels based on the status code.
-		if status >= 500 {
+		switch {
+		case status >= 500:
 			// Log 5xx server errors with a higher level
 			logger.Error("Server Error", fields...)
-		} else if status >= 400 {
+		case status >= 400:
 			// Log 4xx client errors as warnings
 			logger.Warn("Client Error", fields...)
-		} else {
+		default:
 			// Log successful requests as info
 			logger.Info("Request Handled", fields...)
 		}
