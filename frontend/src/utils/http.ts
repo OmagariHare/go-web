@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
+import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios'
 
 // 创建axios实例
 const http: AxiosInstance = axios.create({
@@ -11,10 +11,11 @@ const http: AxiosInstance = axios.create({
 
 // 请求拦截器
 http.interceptors.request.use(
-  (config: AxiosRequestConfig) => {
+  (config: InternalAxiosRequestConfig) => {
     // 添加认证token
     const token = localStorage.getItem('token')
-    if (token && config.headers) {
+    if (token) {
+      // InternalAxiosRequestConfig 保证了 headers 的存在
       config.headers.Authorization = `Bearer ${token}`
     }
     return config
