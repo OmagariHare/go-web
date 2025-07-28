@@ -1,5 +1,5 @@
 import http from '../utils/http'
-import { User } from '../types/user'
+import { User, UsersResponse } from '../types/user'
 
 class UserService {
   /**
@@ -7,8 +7,10 @@ class UserService {
    * @returns 用户列表
    */
   async getUsers(): Promise<User[]> {
-    const response = await http.get<User[]>('/users')
-    return response.data.users || response.data
+    // 明确告诉 http.get，我们期望得到 UsersResponse 类型的响应
+    const response = await http.get<UsersResponse>('/users')
+    // 正确地从响应数据中返回 users 数组
+    return response.data.users
   }
 
   /**
