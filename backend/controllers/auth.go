@@ -20,7 +20,7 @@ func NewAuthController(authService services.AuthServiceInterface) *AuthControlle
 func (ac *AuthController) Register(c *gin.Context) {
 	var req dtos.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.Error(err)
+		_ = c.Error(err)
 		return
 	}
 
@@ -51,7 +51,7 @@ func (ac *AuthController) Register(c *gin.Context) {
 func (ac *AuthController) Login(c *gin.Context) {
 	var req dtos.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.Error(err)
+		_ = c.Error(err)
 		return
 	}
 

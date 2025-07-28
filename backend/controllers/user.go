@@ -44,7 +44,7 @@ func (uc *UserController) GetUsers(c *gin.Context) {
 func (uc *UserController) GetUser(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		c.Error(err)
+		_ = c.Error(err)
 		return
 	}
 
@@ -69,13 +69,13 @@ func (uc *UserController) GetUser(c *gin.Context) {
 func (uc *UserController) UpdateUser(c *gin.Context) {
 	targetUserID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		c.Error(err)
+		_ = c.Error(err)
 		return
 	}
 
 	var req models.User
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.Error(err)
+		_ = c.Error(err)
 		return
 	}
 
@@ -103,7 +103,7 @@ func (uc *UserController) UpdateUser(c *gin.Context) {
 func (uc *UserController) DeleteUser(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		c.Error(err)
+		_ = c.Error(err)
 		return
 	}
 
