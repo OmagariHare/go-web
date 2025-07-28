@@ -1,6 +1,7 @@
+package config
+
 // package config 负责处理应用程序的配置。
 // 它使用Viper库从配置文件和环境变量中读取配置，并提供默认值。
-package config
 
 import (
 	"fmt"

@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"go-web/dtos"
+	"go-web/middleware"
 	"go-web/models"
 	"go-web/services"
+	"go-web/utils"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -39,14 +41,23 @@ func (m *MockAuthService) Login(username, password string) (*models.User, string
 	return args.Get(0).(*models.User), args.String(1), args.Error(2)
 }
 
-func TestRegister_Endpoint_Success(t *testing.T) {
-	// 1. Setup
+func setupAuthTestRouter() (*gin.Engine, *MockAuthService) {
 	gin.SetMode(gin.TestMode)
+	utils.InitLogger("debug", "", 100, 3, 7, false) // Initialize logger for tests
 	mockAuthService := new(MockAuthService)
 	authController := NewAuthController(mockAuthService)
 
 	router := gin.Default()
+	router.Use(middleware.ErrorHandler())
 	router.POST("/auth/register", authController.Register)
+	router.POST("/auth/login", authController.Login)
+
+	return router, mockAuthService
+}
+
+func TestRegister_Endpoint_Success(t *testing.T) {
+	// 1. Setup
+	router, mockAuthService := setupAuthTestRouter()
 
 	// 2. Define Mock Expectations
 	registerReq := dtos.RegisterRequest{
@@ -65,15 +76,10 @@ func TestRegister_Endpoint_Success(t *testing.T) {
 	mockAuthService.On("Register", registerReq.Username, registerReq.Email, registerReq.Password).Return(mockedUser, mockedToken, nil)
 
 	// 3. Execution
-	// Create the HTTP request
 	jsonValue, _ := json.Marshal(registerReq)
 	req, _ := http.NewRequest(http.MethodPost, "/auth/register", bytes.NewBuffer(jsonValue))
 	req.Header.Set("Content-Type", "application/json")
-
-	// Create a response recorder
 	w := httptest.NewRecorder()
-
-	// Serve the request
 	router.ServeHTTP(w, req)
 
 	// 4. Assertions
@@ -90,12 +96,7 @@ func TestRegister_Endpoint_Success(t *testing.T) {
 
 func TestRegister_Endpoint_UserExists(t *testing.T) {
 	// 1. Setup
-	gin.SetMode(gin.TestMode)
-	mockAuthService := new(MockAuthService)
-	authController := NewAuthController(mockAuthService)
-
-	router := gin.Default()
-	router.POST("/auth/register", authController.Register)
+	router, mockAuthService := setupAuthTestRouter()
 
 	// 2. Define Mock Expectations
 	registerReq := dtos.RegisterRequest{
@@ -117,22 +118,18 @@ func TestRegister_Endpoint_UserExists(t *testing.T) {
 	// 4. Assertions
 	assert.Equal(t, http.StatusConflict, w.Code, "HTTP status code should be 409 Conflict")
 
-	var errorResponse gin.H
+	var errorResponse middleware.ErrorResponse
 	err := json.Unmarshal(w.Body.Bytes(), &errorResponse)
 	assert.NoError(t, err)
-	assert.Contains(t, errorResponse["error"], "user already exists", "Error message should indicate user exists")
+	assert.Equal(t, http.StatusConflict, errorResponse.Code)
+	assert.Contains(t, errorResponse.Message, "用户已存在")
 
 	mockAuthService.AssertExpectations(t)
 }
 
 func TestLogin_Endpoint_Success(t *testing.T) {
 	// 1. Setup
-	gin.SetMode(gin.TestMode)
-	mockAuthService := new(MockAuthService)
-	authController := NewAuthController(mockAuthService)
-
-	router := gin.Default()
-	router.POST("/auth/login", authController.Login)
+	router, mockAuthService := setupAuthTestRouter()
 
 	// 2. Define Mock Expectations
 	loginReq := dtos.LoginRequest{
@@ -169,12 +166,7 @@ func TestLogin_Endpoint_Success(t *testing.T) {
 
 func TestLogin_Endpoint_InvalidCredentials(t *testing.T) {
 	// 1. Setup
-	gin.SetMode(gin.TestMode)
-	mockAuthService := new(MockAuthService)
-	authController := NewAuthController(mockAuthService)
-
-	router := gin.Default()
-	router.POST("/auth/login", authController.Login)
+	router, mockAuthService := setupAuthTestRouter()
 
 	// 2. Define Mock Expectations
 	loginReq := dtos.LoginRequest{
@@ -194,10 +186,11 @@ func TestLogin_Endpoint_InvalidCredentials(t *testing.T) {
 	// 4. Assertions
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
 
-	var errorResponse gin.H
+	var errorResponse middleware.ErrorResponse
 	err := json.Unmarshal(w.Body.Bytes(), &errorResponse)
 	assert.NoError(t, err)
-	assert.Contains(t, errorResponse["error"], "invalid username or password")
+	assert.Equal(t, http.StatusUnauthorized, errorResponse.Code)
+	assert.Contains(t, errorResponse.Message, "无效的用户名或密码")
 
 	mockAuthService.AssertExpectations(t)
 }

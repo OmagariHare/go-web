@@ -1,5 +1,6 @@
-// package models 定义了应用程序中使用的数据结构，这些结构将映射到数据库中的表。
 package models
+
+// package models 定义了应用程序中使用的数据结构，这些结构将映射到数据库中的表。
 
 import (
 	"gorm.io/gorm"

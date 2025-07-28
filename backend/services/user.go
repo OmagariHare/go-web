@@ -1,6 +1,7 @@
+package services
+
 // package services 包含了应用程序的业务逻辑。
 // 这个文件特别关注与用户管理相关的功能。
-package services
 
 import (
 	"errors"

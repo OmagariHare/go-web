@@ -1,6 +1,7 @@
+package repositories
+
 // package repositories 提供了数据访问的抽象层。
 // 它定义了与数据库交互的接口，以及使用GORM实现的具体逻辑。
-package repositories
 
 import (
 	"go-web/models"

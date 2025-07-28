@@ -1,6 +1,7 @@
+package services
+
 // package services 包含了应用程序的业务逻辑。
 // 它作为控制器和仓库之间的桥梁，处理如用户认证、注册等核心功能。
-package services
 
 import (
 	"go-web/config"
