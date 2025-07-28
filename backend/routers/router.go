@@ -15,6 +15,9 @@ import (
 func SetupRouter(cfg *config.Config) *gin.Engine {
 	r := gin.Default()
 
+	// Add the error handling middleware as the first middleware.
+	r.Use(middleware.ErrorHandler())
+
 	// 添加CORS中间件
 	r.Use(middleware.CORSMiddleware(cfg))
 

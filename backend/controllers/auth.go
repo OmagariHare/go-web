@@ -20,18 +20,13 @@ func NewAuthController(authService services.AuthServiceInterface) *AuthControlle
 func (ac *AuthController) Register(c *gin.Context) {
 	var req dtos.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.Error(err)
 		return
 	}
 
 	user, token, err := ac.AuthService.Register(req.Username, req.Email, req.Password)
 	if err != nil {
-		switch err.(type) {
-		case *services.UserExistsError:
-			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
-		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register user"})
-		}
+		_ = c.Error(err)
 		return
 	}
 
@@ -56,18 +51,13 @@ func (ac *AuthController) Register(c *gin.Context) {
 func (ac *AuthController) Login(c *gin.Context) {
 	var req dtos.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.Error(err)
 		return
 	}
 
 	user, token, err := ac.AuthService.Login(req.Username, req.Password)
 	if err != nil {
-		switch err.(type) {
-		case *services.InvalidCredentialsError:
-			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to login"})
-		}
+		_ = c.Error(err)
 		return
 	}
 

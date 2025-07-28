@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"errors"
 	"go-web/dtos"
 	"go-web/models"
 	"go-web/services"
@@ -23,7 +22,7 @@ func NewUserController(userService services.UserServiceInterface) *UserControlle
 func (uc *UserController) GetUsers(c *gin.Context) {
 	users, err := uc.UserService.GetUsers()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch users"})
+		_ = c.Error(err)
 		return
 	}
 
@@ -45,13 +44,13 @@ func (uc *UserController) GetUsers(c *gin.Context) {
 func (uc *UserController) GetUser(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		c.Error(err)
 		return
 	}
 
 	user, err := uc.UserService.GetUser(uint(id))
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		_ = c.Error(err)
 		return
 	}
 
@@ -70,13 +69,13 @@ func (uc *UserController) GetUser(c *gin.Context) {
 func (uc *UserController) UpdateUser(c *gin.Context) {
 	targetUserID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		c.Error(err)
 		return
 	}
 
 	var req models.User
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.Error(err)
 		return
 	}
 
@@ -85,11 +84,7 @@ func (uc *UserController) UpdateUser(c *gin.Context) {
 
 	user, err := uc.UserService.UpdateUser(uint(targetUserID), currentUserID, currentUserRole.(string), &req)
 	if err != nil {
-		if errors.Is(err, services.ErrPermissionDenied) {
-			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
-		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user"})
-		}
+		_ = c.Error(err)
 		return
 	}
 
@@ -108,12 +103,13 @@ func (uc *UserController) UpdateUser(c *gin.Context) {
 func (uc *UserController) DeleteUser(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		c.Error(err)
 		return
 	}
 
-	if err := uc.UserService.DeleteUser(uint(id)); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete user"})
+	err = uc.UserService.DeleteUser(uint(id))
+	if err != nil {
+		_ = c.Error(err)
 		return
 	}
 
