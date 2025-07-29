@@ -6,6 +6,7 @@ package config
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/spf13/viper"
 )
@@ -67,6 +68,10 @@ type LogConfig struct {
 // 它会首先设置一系列默认值，然后尝试从配置文件中读取并覆盖这些默认值。
 // 如果配置文件不存在或读取失败，将使用默认值并打印警告信息。
 func LoadConfig() *Config {
+	// 允许环境读取变量，如用 JWT_SECRET 覆盖 jwt.secret
+	viper.AutomaticEnv()
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+
 	// 设置配置文件名、类型和路径
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")

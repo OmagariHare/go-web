@@ -39,7 +39,7 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 	roleRepository := repositories.NewGormRoleRepository(db)
 
 	// 创建服务实例
-	authService := services.NewAuthService(cfg, userRepository, roleRepository)
+	authService := services.NewAuthService(cfg, userRepository, roleRepository, db)
 	userService := services.NewUserService(userRepository)
 
 	// 创建控制器实例

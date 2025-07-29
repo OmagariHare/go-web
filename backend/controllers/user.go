@@ -74,16 +74,23 @@ func (uc *UserController) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	var req models.User
+	var req dtos.UpdateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		_ = c.Error(err)
 		return
 	}
 
+	// 从DTO创建更新模型，避免不安全的字段绑定
+	updateData := &models.User{
+		Username: req.Username,
+		Email:    req.Email,
+		RoleID:   req.RoleID,
+	}
+
 	currentUserID := c.GetUint("user_id")
 	currentUserRole, _ := c.Get("role")
 
-	user, err := uc.UserService.UpdateUser(uint(targetUserID), currentUserID, currentUserRole.(string), &req)
+	user, err := uc.UserService.UpdateUser(uint(targetUserID), currentUserID, currentUserRole.(string), updateData)
 	if err != nil {
 		_ = c.Error(err)
 		return
