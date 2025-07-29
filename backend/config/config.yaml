@@ -37,3 +37,7 @@ log:
   maxBackups: 5
   maxAge: 30
   compress: false
+
+ratelimiter:
+  period: 1m
+  limit: 10

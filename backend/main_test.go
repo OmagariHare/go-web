@@ -86,6 +86,10 @@ func setupTestConfig() *config.Config {
 		Log: config.LogConfig{
 			Level: "debug",
 		},
+		RateLimiter: config.RateLimiterConfig{
+			Period: "1m",
+			Limit:  10,
+		},
 	}
 }
 

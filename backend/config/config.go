@@ -14,12 +14,19 @@ import (
 // Config 是应用程序所有配置的根结构体。
 // 它包含了各个模块的配置，如服务器、数据库、JWT、Casbin和日志。
 type Config struct {
-	App      AppConfig      // 应用特定配置
-	Server   ServerConfig   // 服务器相关配置
-	Database DatabaseConfig // 数据库连接配置
-	JWT      JWTConfig      // JWT认证配置
-	Casbin   CasbinConfig   // Casbin权限控制配置
-	Log      LogConfig      // 日志记录配置
+	App         AppConfig         // 应用特定配置
+	Server      ServerConfig      // 服务器相关配置
+	Database    DatabaseConfig    // 数据库连接配置
+	JWT         JWTConfig         // JWT认证配置
+	Casbin      CasbinConfig      // Casbin权限控制配置
+	Log         LogConfig         // 日志记录配置
+	RateLimiter RateLimiterConfig // 速率限制配置
+}
+
+// RateLimiterConfig 存储速率限制相关的配置。
+type RateLimiterConfig struct {
+	Period string // 速率限制的周期 (例如, "1m", "1h")
+	Limit  int64  // 在一个周期内允许的请求数量
 }
 
 // AppConfig 存储应用级别的配置。
@@ -112,6 +119,10 @@ func LoadConfig() *Config {
 	viper.SetDefault("log.maxAge", 30)
 	viper.SetDefault("log.compress", false)
 
+	// 速率限制配置
+	viper.SetDefault("ratelimiter.period", "1m")
+	viper.SetDefault("ratelimiter.limit", 10)
+
 	// 尝试读取配置文件
 	if err := viper.ReadInConfig(); err != nil {
 		// 如果读取失败，记录一条警告信息，程序将使用默认配置继续运行
@@ -152,6 +163,10 @@ func LoadConfig() *Config {
 			MaxBackups: viper.GetInt("log.maxBackups"),
 			MaxAge:     viper.GetInt("log.maxAge"),
 			Compress:   viper.GetBool("log.compress"),
+		},
+		RateLimiter: RateLimiterConfig{
+			Period: viper.GetString("ratelimiter.period"),
+			Limit:  viper.GetInt64("ratelimiter.limit"),
 		},
 	}
 

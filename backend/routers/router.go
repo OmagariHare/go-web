@@ -51,6 +51,7 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
 	auth := r.Group("/auth")
+	auth.Use(middleware.RateLimiterMiddleware(cfg))
 	{
 		auth.POST("/register", authController.Register)
 		auth.POST("/login", authController.Login)
