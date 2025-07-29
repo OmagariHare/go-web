@@ -1,5 +1,6 @@
-// package services_test 包含了对services包的单元测试和集成测试。
 package services_test
+
+// 这个因为是关键逻辑，所以用集成测试，services_test表示黑盒
 
 import (
 	"go-web/config"
@@ -60,11 +61,17 @@ func (suite *AuthServiceTestSuite) SetupSuite() {
 	suite.service = services.NewAuthService(suite.cfg, suite.userRepo, suite.roleRepo, suite.db)
 }
 
-// TearDownTest 在每个测试后运行，用于清理数据库。
-func (suite *AuthServiceTestSuite) TearDownTest() {
+// SetupTest 在每个测试方法运行之前被调用。
+// 它负责清理数据库并创建测试所需的基础数据（例如，默认角色）。
+func (suite *AuthServiceTestSuite) SetupTest() {
 	// 清理所有表以确保测试隔离
 	suite.db.Exec("DELETE FROM users")
 	suite.db.Exec("DELETE FROM roles")
+
+	// 创建测试所需的基础数据
+	userRole := models.Role{Name: "user", Description: "普通用户"}
+	err := suite.roleRepo.Create(&userRole)
+	suite.Require().NoError(err, "SetupTest: failed to create default user role")
 }
 
 // TestAuthServiceTestSuite 运行测试套件。

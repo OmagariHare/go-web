@@ -60,82 +60,81 @@ func NewAuthService(cfg *config.Config, userRepo repositories.UserRepository, ro
 // 整个注册过程在一个数据库事务中完成，以确保数据一致性。
 func (s *AuthService) Register(username, email, password string) (*models.User, string, error) {
 	var user *models.User
-	var token string
 
-	// 检查是否在测试环境中
-	isTest := s.DB != nil && s.DB.Statement.Dest == &gorm.DB{}
+	// 启动数据库事务
+	tx := s.DB.Begin()
+	if tx.Error != nil {
+		return nil, "", tx.Error
+	}
 
-	var txUserRepo repositories.UserRepository
-	var txRoleRepo repositories.RoleRepository
-
-	// 在测试环境中，我们使用注入的模拟仓库
-	if isTest {
-		txUserRepo = s.UserRepository
-		txRoleRepo = s.RoleRepository
-	} else {
-		// 在生产环境中，我们在事务中创建新的仓库实例
-		tx := s.DB.Begin()
-		defer func() {
-			if r := recover(); r != nil {
-				tx.Rollback()
-			}
-		}()
-
-		txUserRepo = repositories.NewGormUserRepository(tx)
-		txRoleRepo = repositories.NewGormRoleRepository(tx)
-
-		// 1. 检查用户名或邮箱是否已经被注册
-		_, err := txUserRepo.FindByUsernameOrEmail(username, email)
-		if err == nil {
+	// 使用 defer-recover 机制确保事务在发生 panic 时能够回滚
+	defer func() {
+		if r := recover(); r != nil {
 			tx.Rollback()
-			return nil, "", &UserExistsError{}
 		}
+	}()
 
-		// 2. 对用户密码进行哈希加密
-		hashedPassword, err := utils.HashPassword(password)
-		if err != nil {
-			tx.Rollback()
-			return nil, "", err
-		}
+	// 在事务中创建仓库实例
+	txUserRepo := repositories.NewGormUserRepository(tx)
+	txRoleRepo := repositories.NewGormRoleRepository(tx)
 
-		// 3. 获取或创建默认角色
-		defaultRoleName := s.Config.App.DefaultRole
-		role, err := txRoleRepo.FindByName(defaultRoleName)
-		if err != nil {
-			// 如果默认角色在数据库中不存在，则创建一个新的
-			role = &models.Role{Name: defaultRoleName, Description: "普通用户"}
-			if err := txRoleRepo.Create(role); err != nil {
-				tx.Rollback()
-				return nil, "", err
-			}
-		}
+	// 1. 检查用户名或邮箱是否已经被注册
+	// 在注册场景下，我们期望这里返回 "record not found" 错误
+	_, err := txUserRepo.FindByUsernameOrEmail(username, email)
+	if err == nil {
+		tx.Rollback()
+		return nil, "", &UserExistsError{}
+	}
+	if err != gorm.ErrRecordNotFound {
+		// 如果是其他类型的数据库错误，则回滚并返回错误
+		tx.Rollback()
+		return nil, "", err
+	}
 
-		// 4. 创建新用户实例
-		user = &models.User{
-			Username: username,
-			Email:    email,
-			Password: hashedPassword,
-			RoleID:   role.ID,
-		}
+	// 2. 对用户密码进行哈希加密
+	hashedPassword, err := utils.HashPassword(password)
+	if err != nil {
+		tx.Rollback()
+		return nil, "", err
+	}
 
-		// 5. 将新用户存入数据库
-		if err := txUserRepo.Create(user); err != nil {
-			tx.Rollback()
-			return nil, "", err
-		}
+	// 3. 获取默认角色
+	// 我们期望默认角色在数据库中总是存在的（由测试的SetupTest或生产的seeder保证）
+	defaultRoleName := s.Config.App.DefaultRole
+	role, err := txRoleRepo.FindByName(defaultRoleName)
+	if err != nil {
+		// 如果角色不存在（这在正常情况下不应该发生），则回滚
+		tx.Rollback()
+		return nil, "", err
+	}
 
-		// 6. 加载用户的角色信息，以便在后续步骤中使用
-		// 注意：在事务内，user对象已经包含了RoleID，但Role对象本身需要加载
-		user.Role = *role
+	// 4. 创建新用户实例
+	user = &models.User{
+		Username: username,
+		Email:    email,
+		Password: hashedPassword,
+		RoleID:   role.ID,
+	}
 
-		if err := tx.Commit().Error; err != nil {
-			return nil, "", err
-		}
+	// 5. 将新用户存入数据库
+	if err := txUserRepo.Create(user); err != nil {
+		tx.Rollback()
+		return nil, "", err
+	}
+
+	// 6. 提交事务
+	if err := tx.Commit().Error; err != nil {
+		return nil, "", err
 	}
 
 	// 7. 为新注册的用户生成JWT（在事务成功后执行）
+	// 此时 user 对象已经包含了 RoleID，但 Role 对象本身需要从 role 变量中获取
+	user.Role = *role
 	token, err := utils.GenerateToken(user.ID, user.Role.Name, s.Config)
 	if err != nil {
+		// 事务已经提交，但Token生成失败。这是一个边缘情况。
+		// 此时用户已创建成功，但无法立即登录。
+		// 我们可以选择返回错误，让用户稍后尝试登录。
 		return nil, "", err
 	}
 

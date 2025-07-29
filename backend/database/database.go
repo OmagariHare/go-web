@@ -6,6 +6,7 @@ import (
 	"go-web/config"
 	"go-web/models"
 	"log"
+	"time"
 
 	gormadapter "github.com/casbin/gorm-adapter/v3"
 	"gorm.io/driver/postgres"
@@ -40,6 +41,18 @@ func ConnectDB(cfg *config.Config) {
 	}
 
 	log.Println("数据库连接成功")
+
+	// 配置数据库连接池
+	sqlDB, err := DB.DB()
+	if err != nil {
+		log.Fatal("无法获取底层的sql.DB: ", err)
+	}
+	// 设置连接池中的最大空闲连接数
+	sqlDB.SetMaxIdleConns(cfg.Database.MaxIdleConns)
+	// 设置数据库的最大打开连接数
+	sqlDB.SetMaxOpenConns(cfg.Database.MaxOpenConns)
+	// 设置连接可被重用的最大时间
+	sqlDB.SetConnMaxLifetime(time.Duration(cfg.Database.ConnMaxLifetime) * time.Minute)
 
 	// 自动迁移数据模型，确保表结构与模型定义一致
 	// AutoMigrate 会创建或更新表以匹配 User, Role 和 CasbinRule 结构体

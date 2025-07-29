@@ -35,12 +35,15 @@ type ServerConfig struct {
 
 // DatabaseConfig 存储数据库连接信息。
 type DatabaseConfig struct {
-	Host     string // 数据库主机地址
-	Port     int    // 数据库端口
-	User     string // 数据库用户名
-	Password string // 数据库密码
-	DBName   string // 数据库名称
-	SSLMode  string // SSL模式（例如 "disable", "require"）
+	Host            string // 数据库主机地址
+	Port            int    // 数据库端口
+	User            string // 数据库用户名
+	Password        string // 数据库密码
+	DBName          string // 数据库名称
+	SSLMode         string // SSL模式（例如 "disable", "require"）
+	MaxIdleConns    int    // 连接池中的最大空闲连接数
+	MaxOpenConns    int    // 数据库的最大打开连接数
+	ConnMaxLifetime int    // 连接可被重用的最大时间（以分钟为单位）
 }
 
 // JWTConfig 存储JWT（JSON Web Token）相关的配置。
@@ -94,6 +97,9 @@ func LoadConfig() *Config {
 	viper.SetDefault("database.password", "postgres")
 	viper.SetDefault("database.dbname", "goweb")
 	viper.SetDefault("database.sslmode", "disable")
+	viper.SetDefault("database.max_idle_conns", 10)
+	viper.SetDefault("database.max_open_conns", 100)
+	viper.SetDefault("database.conn_max_lifetime", 60)
 
 	// JWT配置
 	viper.SetDefault("jwt.expiration", 86400) // 默认24小时
@@ -122,12 +128,15 @@ func LoadConfig() *Config {
 			AllowedOrigins: viper.GetStringSlice("server.allowed_origins"),
 		},
 		Database: DatabaseConfig{
-			Host:     viper.GetString("database.host"),
-			Port:     viper.GetInt("database.port"),
-			User:     viper.GetString("database.user"),
-			Password: viper.GetString("database.password"),
-			DBName:   viper.GetString("database.dbname"),
-			SSLMode:  viper.GetString("database.sslmode"),
+			Host:            viper.GetString("database.host"),
+			Port:            viper.GetInt("database.port"),
+			User:            viper.GetString("database.user"),
+			Password:        viper.GetString("database.password"),
+			DBName:          viper.GetString("database.dbname"),
+			SSLMode:         viper.GetString("database.sslmode"),
+			MaxIdleConns:    viper.GetInt("database.max_idle_conns"),
+			MaxOpenConns:    viper.GetInt("database.max_open_conns"),
+			ConnMaxLifetime: viper.GetInt("database.conn_max_lifetime"),
 		},
 		JWT: JWTConfig{
 			Secret:     viper.GetString("jwt.secret"),
