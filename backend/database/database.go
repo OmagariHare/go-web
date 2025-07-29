@@ -15,6 +15,12 @@ import (
 // DB 是一个全局的*gorm.DB对象，用于在整个应用程序中访问数据库。
 var DB *gorm.DB
 
+// NewPostgresDialector 创建一个新的 gorm.Dialector 用于 PostgreSQL。
+// 封装了 postgres.Open，方便在测试中模拟。
+func NewPostgresDialector(dsn string) gorm.Dialector {
+	return postgres.Open(dsn)
+}
+
 // ConnectDB 使用提供的配置初始化数据库连接。
 // 它会执行以下操作：
 // 1. 使用配置中的DSN（数据源名称）打开一个到PostgreSQL数据库的连接。
@@ -27,7 +33,7 @@ func ConnectDB(cfg *config.Config) {
 	var err error
 
 	// 使用GORM和PostgreSQL驱动打开数据库连接
-	DB, err = gorm.Open(postgres.Open(cfg.GetDSN()), &gorm.Config{})
+	DB, err = gorm.Open(NewPostgresDialector(cfg.GetDSN()), &gorm.Config{})
 	if err != nil {
 		// 如果连接失败，记录致命错误并退出程序
 		log.Fatal("无法连接到数据库: ", err)

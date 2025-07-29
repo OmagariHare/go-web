@@ -8,6 +8,7 @@ import (
 	"go-web/repositories"
 	"go-web/services"
 	"go-web/utils"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -45,7 +46,10 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 	authController := controllers.NewAuthController(authService)
 	userController := controllers.NewUserController(userService)
 
-	// 公开路由（无需认证）
+	// Public routes (no authentication required)
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ok"})
+	})
 	auth := r.Group("/auth")
 	{
 		auth.POST("/register", authController.Register)

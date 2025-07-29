@@ -2,7 +2,9 @@
   <dictionary name="project">
     <words>
       <w>casbin</w>
+      <w>goweb</w>
       <w>postgre</w>
+      <w>sslmode</w>
     </words>
   </dictionary>
 </component>

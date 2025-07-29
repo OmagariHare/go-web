@@ -1,5 +1,6 @@
-// package services_test 包含了对services包的单元测试。
 package services
+
+// package services_test 包含了对services包的单元测试。
 
 import (
 	"go-web/mocks"
